@@ -9,10 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.751.0",
+    "@aws-sdk/lib-dynamodb": "^3.751.0",
     "@monaco-editor/react": "^4.7.0",
     "aws-amplify": "^6.13.1",
+    "axios": "^1.7.9",
+    "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "joi": "^17.13.3",
     "lucide-react": "^0.475.0",
     "next": "15.1.7",
     "react": "^19.0.0",

@@ -3,9 +3,18 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { use } from 'react'; // Import React.use
 import { curriculumData, type Chapter } from '@/lib/curriculum-data';
-import { getTopicContent, type ContentSection, type CodeExample, type TopicContent } from '@/lib/topic-content';
+import { 
+  type ContentSection, 
+  type CodeExample, 
+  type TopicContent, 
+  type ImageContent,
+  getTopicContent,
+  saveTopicContent,
+  resetTopicContent
+} from '@/lib/topic-content';
 
 // Find a chapter by ID
 const findChapterById = (chapterId: string): { chapter: Chapter; categoryId: string } | null => {
@@ -211,9 +220,10 @@ interface TopicContentEditorProps {
   content: TopicContent;
   onSave: (updatedContent: TopicContent) => void;
   onCancel: () => void;
+  onReset: () => void;
 }
 
-const TopicContentEditor: React.FC<TopicContentEditorProps> = ({ content, onSave, onCancel }) => {
+const TopicContentEditor: React.FC<TopicContentEditorProps> = ({ content, onSave, onCancel, onReset }) => {
   const [editedContent, setEditedContent] = useState<TopicContent>({...content});
 
   const handleSectionUpdate = (index: number, updatedSection: ContentSection) => {
@@ -357,6 +367,12 @@ const TopicContentEditor: React.FC<TopicContentEditorProps> = ({ content, onSave
       
       <div className="flex justify-end gap-3 mt-6">
         <button 
+          onClick={onReset}
+          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+        >
+          Reset to Default
+        </button>
+        <button 
           onClick={onCancel}
           className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
         >
@@ -376,63 +392,98 @@ const TopicContentEditor: React.FC<TopicContentEditorProps> = ({ content, onSave
 export default function TopicPage({ params }: { params: { chapterId: string; topicId: string } }) {
   const [isEditing, setIsEditing] = useState(false);
   const [currentContent, setCurrentContent] = useState<TopicContent | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [chapterInfo, setChapterInfo] = useState<{ chapter: Chapter; categoryId: string } | null>(null);
+  const [category, setCategory] = useState<any>(null);
+  const [topicName, setTopicName] = useState<string | undefined>(undefined);
 
-  // Find the chapter by ID
-  const chapterInfo = findChapterById(params.chapterId);
-  
-  // Return 404 if chapter not found
-  if (!chapterInfo) {
-    notFound();
+  interface PageParams {
+    chapterId: string;
+    topicId: string;
   }
+
+  // Create memoized params to use in dependency array
+  const unwrappedParams = use(params as any) as { chapterId: string; topicId: string };
+  const chapterId = unwrappedParams.chapterId;
+  const topicId = unwrappedParams.topicId;
   
-  const { chapter, categoryId } = chapterInfo;
-  const category = curriculumData.find(cat => cat.id === categoryId)!;
-  
-  // Find the topic within the chapter
-  const topicName = findTopicByIdInChapter(chapter, params.topicId);
-  
-  // Return 404 if topic not found
-  if (!topicName) {
-    notFound();
-  }
-  
-  // Get the detailed topic content
-  const initialTopicContent = getTopicContent(params.topicId);
-  
-  // Fallback content if the detailed content isn't available - match TopicContent structure
-  const fallbackContent: TopicContent = {
-    id: params.topicId,
-    title: topicName,
-    introduction: `Learn about ${topicName} in this comprehensive lesson.`,
-    learningObjectives: [`Understand and apply ${topicName} concepts`],
-    sections: [{
-      type: 'paragraph' as const,
-      content: `${topicName} are important concepts in programming. This section will be expanded with detailed content in the future.`
-    }],
-    relatedResources: [],
-    // Add empty optional properties to match the TopicContent type
-    quiz: undefined,
-    nextTopic: undefined,
-    previousTopic: undefined
-  };
-  
-  // Use state to track content
-  if (!currentContent) {
-    setCurrentContent(initialTopicContent || fallbackContent);
-    return <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-    </div>;
-  }
+  // Load chapter and topic data
+  useEffect(() => {
+    // Find the chapter by ID - moved from the synchronous code
+    const loadedChapterInfo = findChapterById(chapterId);
+    setChapterInfo(loadedChapterInfo);
+    
+    if (loadedChapterInfo) {
+      const loadedCategory = curriculumData.find(cat => cat.id === loadedChapterInfo.categoryId);
+      setCategory(loadedCategory);
+      
+      const loadedTopicName = findTopicByIdInChapter(loadedChapterInfo.chapter, topicId);
+      setTopicName(loadedTopicName);
+      
+      // Get the content
+      const topicContent = getTopicContent(topicId);
+      
+      // Fallback content if the detailed content isn't available
+      const fallbackContent: TopicContent = {
+        id: topicId,
+        title: loadedTopicName || "Unknown Topic",
+        introduction: `Learn about ${loadedTopicName} in this comprehensive lesson.`,
+        learningObjectives: [`Understand and apply ${loadedTopicName} concepts`],
+        sections: [{
+          type: 'paragraph' as const,
+          content: `${loadedTopicName} are important concepts in programming. This section will be expanded with detailed content in the future.`
+        }],
+        relatedResources: [],
+        quiz: undefined,
+        nextTopic: undefined,
+        previousTopic: undefined
+      };
+      
+      setCurrentContent(topicContent || fallbackContent);
+      setIsLoading(false);
+    }
+  }, [chapterId, topicId]); // Using the extracted variables instead of params.chapterId, params.topicId
+
+  // Handle 404 cases when data loads
+  useEffect(() => {
+    if (!isLoading) {
+      if (!chapterInfo || !topicName) {
+        // This will trigger Next.js not-found page
+        notFound();
+      }
+    }
+  }, [isLoading, chapterInfo, topicName]);
 
   const handleSaveContent = (updatedContent: TopicContent) => {
-    // In a real application, you would save this to your backend
-    console.log('Saving updated content:', updatedContent);
+    // Save to local storage
+    saveTopicContent(updatedContent);
     setCurrentContent(updatedContent);
     setIsEditing(false);
     
-    // Here you would typically make an API call to save the changes
-    alert('Content updated successfully! In a real application, this would be saved to your backend.');
+    // Show success message
+    alert('Content updated successfully! Your changes have been saved.');
   };
+
+  const handleResetContent = () => {
+    if (confirm('Are you sure you want to reset this topic to its original content? All your changes will be lost.')) {
+      resetTopicContent(topicId);
+      
+      // Reload the original content
+      const originalContent = getTopicContent(topicId);
+      setCurrentContent(originalContent);
+      setIsEditing(false);
+      alert('Content has been reset to the original version.');
+    }
+  };
+
+  // Show loading state
+  if (isLoading || !currentContent || !chapterInfo || !category) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -444,6 +495,7 @@ export default function TopicPage({ params }: { params: { chapterId: string; top
               content={currentContent}
               onSave={handleSaveContent}
               onCancel={() => setIsEditing(false)}
+              onReset={handleResetContent}
             />
           </div>
         </div>
@@ -456,9 +508,9 @@ export default function TopicPage({ params }: { params: { chapterId: string; top
             <div className="breadcrumbs text-sm text-gray-600">
               <Link href="/curriculum" className="hover:text-blue-600">Curriculum</Link>
               <span className="mx-2">›</span>
-              <Link href={`/curriculum/${categoryId}`} className="hover:text-blue-600">{category.title}</Link>
+              <Link href={`/curriculum/${chapterInfo.categoryId}`} className="hover:text-blue-600">{category.title}</Link>
               <span className="mx-2">›</span>
-              <Link href={`/chapters/${chapter.id}`} className="hover:text-blue-600">{chapter.title}</Link>
+              <Link href={`/chapters/${chapterInfo.chapter.id}`} className="hover:text-blue-600">{chapterInfo.chapter.title}</Link>
               <span className="mx-2">›</span>
               <span className="text-gray-900">{topicName}</span>
             </div>
@@ -568,7 +620,7 @@ export default function TopicPage({ params }: { params: { chapterId: string; top
           <div className="flex justify-between mb-8">
             {currentContent.previousTopic ? (
               <Link 
-                href={`/topics/${params.chapterId}/${currentContent.previousTopic.id}`}
+                href={`/topics/${chapterId}/${currentContent.previousTopic.id}`}
                 className="bg-white border border-gray-300 rounded-md px-4 py-2 flex items-center text-gray-700 hover:bg-gray-50"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -578,7 +630,7 @@ export default function TopicPage({ params }: { params: { chapterId: string; top
               </Link>
             ) : (
               <Link 
-                href={`/chapters/${params.chapterId}`}
+                href={`/chapters/${chapterId}`}
                 className="bg-white border border-gray-300 rounded-md px-4 py-2 flex items-center text-gray-700 hover:bg-gray-50"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -590,7 +642,7 @@ export default function TopicPage({ params }: { params: { chapterId: string; top
             
             {currentContent.nextTopic ? (
               <Link 
-                href={`/topics/${params.chapterId}/${currentContent.nextTopic.id}`}
+                href={`/topics/${chapterId}/${currentContent.nextTopic.id}`}
                 className="bg-blue-600 text-white rounded-md px-4 py-2 flex items-center hover:bg-blue-700"
               >
                 {currentContent.nextTopic.title}
@@ -600,7 +652,7 @@ export default function TopicPage({ params }: { params: { chapterId: string; top
               </Link>
             ) : (
               <Link 
-                href={`/chapters/${params.chapterId}`}
+                href={`/chapters/${chapterId}`}
                 className="bg-blue-600 text-white rounded-md px-4 py-2 flex items-center hover:bg-blue-700"
               >
                 Complete Chapter

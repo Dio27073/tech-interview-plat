@@ -7,11 +7,12 @@ interface Resource {
 }
 
 interface RelatedResourcesProps {
-  resources: Resource[];
+  resources?: Resource[]; // Make resources optional
 }
 
 const RelatedResources: React.FC<RelatedResourcesProps> = ({ resources }) => {
-  if (resources.length === 0) {
+  // Check if resources is undefined or an empty array
+  if (!resources || resources.length === 0) {
     return null;
   }
 
@@ -34,7 +35,14 @@ const RelatedResources: React.FC<RelatedResourcesProps> = ({ resources }) => {
                     : "M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 } />
             </svg>
-            <a href={resource.url} className="text-blue-600 hover:underline">{resource.title}</a>
+            <a 
+              href={resource.url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              {resource.title}
+            </a>
           </li>
         ))}
       </ul>

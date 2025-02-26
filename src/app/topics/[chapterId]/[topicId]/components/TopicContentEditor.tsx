@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import { 
   type ContentSection, 
   type TopicContent,
+  saveTopicContent,
+  resetTopicContent
 } from '@/lib/topic-content';
 import ContentSectionRenderer from './ContentSectionRenderer';
+import { TextWithFormatting } from './FormattedText';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface TopicContentEditorProps {
   content: TopicContent;
@@ -18,7 +22,19 @@ const TopicContentEditor: React.FC<TopicContentEditorProps> = ({
   onCancel, 
   onReset 
 }) => {
-  const [editedContent, setEditedContent] = useState<TopicContent>({...content});
+  const [editedContent, setEditedContent] = useState<TopicContent>({
+    ...content,
+    title: content.title || '',
+    id: content.id,
+    introduction: content.introduction || '',
+    learningObjectives: content.learningObjectives || [],
+    sections: content.sections || []
+  });
+  const [isPreviewingIntro, setIsPreviewingIntro] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
 
   const handleSectionUpdate = (index: number, updatedSection: ContentSection) => {
     const newSections = [...editedContent.sections];
@@ -100,9 +116,76 @@ const TopicContentEditor: React.FC<TopicContentEditorProps> = ({
     });
   };
 
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    setSaveError(null);
+    setSaveSuccess(false);
+    
+    try {
+      // Save the content using our updated API function
+      const success = await saveTopicContent(editedContent);
+      
+      if (success) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000); // Clear success message after 3 seconds
+        onSave(editedContent);
+      } else {
+        setSaveError('Failed to save changes. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error saving content:', error);
+      setSaveError('An error occurred while saving. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleResetContent = async () => {
+    setIsResetting(true);
+    setSaveError(null);
+    
+    try {
+      // Confirm with the user
+      const confirmed = window.confirm(
+        'Are you sure you want to reset this content to the default? All your changes will be lost.'
+      );
+      
+      if (!confirmed) {
+        setIsResetting(false);
+        return;
+      }
+      
+      // Reset the content using our updated API function
+      const success = await resetTopicContent(editedContent.id);
+      
+      if (success) {
+        onReset(); // Notify parent component
+      } else {
+        setSaveError('Failed to reset content. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error resetting content:', error);
+      setSaveError('An error occurred while resetting. Please try again.');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-6">Edit Topic Content</h2>
+      
+      {saveError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{saveError}</AlertDescription>
+        </Alert>
+      )}
+      
+      {saveSuccess && (
+        <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
+          <AlertDescription>Changes saved successfully!</AlertDescription>
+        </Alert>
+      )}
       
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-2">Title</label>
@@ -115,30 +198,55 @@ const TopicContentEditor: React.FC<TopicContentEditorProps> = ({
       </div>
       
       <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-2">Introduction</label>
-        <textarea 
-          value={editedContent.introduction} 
-          onChange={(e) => setEditedContent({...editedContent, introduction: e.target.value})}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md min-h-24"
-        />
+        <div className="flex justify-between items-center mb-2">
+          <label className="block text-gray-700 font-medium">Introduction</label>
+          <button
+            type="button"
+            onClick={() => setIsPreviewingIntro(!isPreviewingIntro)}
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
+            {isPreviewingIntro ? "Edit" : "Preview"}
+          </button>
+        </div>
+        
+        {isPreviewingIntro ? (
+          <div className="w-full border border-gray-300 rounded-md p-3 min-h-24 bg-gray-50">
+            <div className="text-gray-700">
+              <TextWithFormatting text={editedContent.introduction} />
+            </div>
+          </div>
+        ) : (
+          <textarea 
+            value={editedContent.introduction} 
+            onChange={(e) => setEditedContent({...editedContent, introduction: e.target.value})}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md min-h-24"
+            placeholder="Enter introduction content. Use * or - for bullet points, one per line. Use **text** for bold text."
+          />
+        )}
+        <p className="text-xs text-gray-500 mt-1">
+          Formatting: Use **text** to make text bold. Use * or - at the start of a line for bullet points.
+        </p>
       </div>
       
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">Learning Objectives</label>
         <textarea 
-          value={editedContent.learningObjectives.join('\n')} 
+          value={editedContent.learningObjectives?.join('\n') || ''} 
           onChange={(e) => {
             const objectives = e.target.value.split('\n').filter(item => item.trim() !== '');
             setEditedContent({...editedContent, learningObjectives: objectives});
           }}
           className="w-full px-3 py-2 border border-gray-300 rounded-md min-h-24"
-          placeholder="Enter learning objectives, one per line"
+          placeholder="Enter learning objectives, one per line. Use **text** for bold text."
         />
+        <p className="text-xs text-gray-500 mt-1">
+          Use **text** to make text bold in your learning objectives.
+        </p>
       </div>
       
       <h3 className="text-xl font-semibold mb-3">Content Sections</h3>
       
-      {editedContent.sections.map((section, index) => (
+      {editedContent.sections?.map((section, index) => (
         <div key={index} className="mb-8 p-4 border border-gray-200 rounded-lg">
           <div className="flex justify-between items-center mb-3">
             <h4 className="font-medium text-gray-700">Section {index + 1}: {section.type}</h4>
@@ -216,10 +324,11 @@ const TopicContentEditor: React.FC<TopicContentEditorProps> = ({
       
       <div className="flex justify-end gap-3 mt-6">
         <button 
-          onClick={onReset}
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          onClick={handleResetContent}
+          disabled={isResetting}
+          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed"
         >
-          Reset to Default
+          {isResetting ? 'Resetting...' : 'Reset to Default'}
         </button>
         <button 
           onClick={onCancel}
@@ -228,10 +337,11 @@ const TopicContentEditor: React.FC<TopicContentEditorProps> = ({
           Cancel
         </button>
         <button 
-          onClick={() => onSave(editedContent)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          onClick={handleSaveChanges}
+          disabled={isSaving}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
         >
-          Save Changes
+          {isSaving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
     </div>

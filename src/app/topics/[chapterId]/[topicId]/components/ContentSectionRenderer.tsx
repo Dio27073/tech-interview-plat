@@ -4,6 +4,7 @@ import {
   type CodeExample, 
   type ImageContent 
 } from '@/lib/topic-content';
+import { FormattedText, TextWithFormatting } from './FormattedText';
 
 interface ContentSectionRendererProps {
   section: ContentSection; 
@@ -49,13 +50,22 @@ const ContentSectionRenderer: React.FC<ContentSectionRendererProps> = ({
                 value={section.content as string}
                 onChange={(e) => handleContentChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md min-h-32"
-                placeholder="Enter content here..."
+                placeholder="Enter content here... Use * or - for bullet points. Use **text** for bold text."
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Formatting: Use **text** to make text bold. Use * or - at the start of a line for bullet points.
+              </p>
             </>
           ) : (
             <>
-              {section.title && <h3 className="text-xl font-semibold mb-3">{section.title}</h3>}
-              <p className="text-gray-700">{section.content as string}</p>
+              {section.title && (
+                <h3 className="text-xl font-semibold mb-3">
+                  <FormattedText text={section.title} />
+                </h3>
+              )}
+              <div className="text-gray-700">
+                <TextWithFormatting text={section.content as string} />
+              </div>
             </>
           )}
         </div>
@@ -106,14 +116,20 @@ const ContentSectionRenderer: React.FC<ContentSectionRendererProps> = ({
             </>
           ) : (
             <>
-              {section.title && <h3 className="text-xl font-semibold mb-3">{section.title}</h3>}
+              {section.title && (
+                <h3 className="text-xl font-semibold mb-3">
+                  <FormattedText text={section.title} />
+                </h3>
+              )}
               <div className="bg-gray-800 text-white p-4 rounded-md my-4 overflow-x-auto">
                 <pre className="text-sm">
                   <code>{codeExample.code}</code>
                 </pre>
               </div>
               {codeExample.description && (
-                <p className="text-sm text-gray-600 mt-2">{codeExample.description}</p>
+                <p className="text-sm text-gray-600 mt-2">
+                  <FormattedText text={codeExample.description} />
+                </p>
               )}
             </>
           )}
@@ -139,15 +155,24 @@ const ContentSectionRenderer: React.FC<ContentSectionRendererProps> = ({
                   handleContentChange(items);
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md min-h-32"
-                placeholder="Enter list items, one per line"
+                placeholder="Enter list items, one per line. Use **text** for bold text."
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Use **text** to make text bold in your list items.
+              </p>
             </>
           ) : (
             <>
-              {section.title && <h3 className="text-xl font-semibold mb-3">{section.title}</h3>}
+              {section.title && (
+                <h3 className="text-xl font-semibold mb-3">
+                  <FormattedText text={section.title} />
+                </h3>
+              )}
               <ul className="list-disc list-inside space-y-2 text-gray-700">
                 {(section.content as string[]).map((item, index) => (
-                  <li key={index}>{item}</li>
+                  <li key={index}>
+                    <FormattedText text={item} />
+                  </li>
                 ))}
               </ul>
             </>
@@ -171,13 +196,22 @@ const ContentSectionRenderer: React.FC<ContentSectionRendererProps> = ({
                 value={section.content as string}
                 onChange={(e) => handleContentChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md min-h-32"
-                placeholder="Enter callout content here..."
+                placeholder="Enter callout content here... Use **text** for bold text."
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Format your callout using **text** for bold and * or - for bullet points.
+              </p>
             </>
           ) : (
             <div className="bg-blue-50 border-l-4 border-blue-500 p-4 my-4">
-              {section.title && <h3 className="text-lg font-semibold mb-2 text-blue-800">{section.title}</h3>}
-              <p className="text-blue-700 whitespace-pre-line">{section.content as string}</p>
+              {section.title && (
+                <h3 className="text-lg font-semibold mb-2 text-blue-800">
+                  <FormattedText text={section.title} />
+                </h3>
+              )}
+              <div className="text-blue-700">
+                <TextWithFormatting text={section.content as string} />
+              </div>
             </div>
           )}
         </div>

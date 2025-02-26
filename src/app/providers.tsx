@@ -1,16 +1,38 @@
+// src/app/providers.tsx
 'use client';
 
-import { useEffect } from 'react';
-import '@/config/auth';  // Import the Amplify configuration
+import React, { useEffect, ReactNode } from 'react';
+import { checkAmplifyConfig, configureAmplifyServices } from '@/lib/aws-config';
+
+// Import auth config (this should initialize Amplify Auth)
+import '@/config/auth';
 
 interface ProvidersProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-export function Providers({ children }: ProvidersProps) {
+export default function Providers({ children }: ProvidersProps) {
   useEffect(() => {
-    // Any additional client-side initialization can go here
+    // Configure additional Amplify services on component mount - only in browser environment
+    if (typeof window !== 'undefined') {
+      try {
+        configureAmplifyServices();
+        
+        // Verify configuration
+        const isConfigured = checkAmplifyConfig();
+        if (!isConfigured) {
+          console.warn('Amplify configuration seems incomplete. Please check your environment variables.');
+        }
+      } catch (error) {
+        console.error('Error initializing additional AWS Amplify services:', error);
+      }
+    }
   }, []);
 
-  return <>{children}</>;
+  return (
+    <>
+      {/* Add other providers here if needed */}
+      {children}
+    </>
+  );
 }

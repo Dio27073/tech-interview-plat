@@ -45,9 +45,13 @@ const DifficultyBadge = ({ level }: { level: Chapter['difficultyLevel'] }) => {
   );
 };
 
-export default function ChapterPage({ params }: { params: { chapterId: string } }) {
+// Make the component async to properly handle the params
+export default async function ChapterPage({ params }: { params: { chapterId: string } }) {
+  // Use await with params to fix the Next.js warning
+  const { chapterId } = await params;
+  
   // Find the chapter by ID
-  const chapterInfo = findChapterById(params.chapterId);
+  const chapterInfo = findChapterById(chapterId);
   
   // Return 404 if chapter not found
   if (!chapterInfo) {
@@ -155,6 +159,7 @@ export default function ChapterPage({ params }: { params: { chapterId: string } 
         </div>
       </section>
 
+      {/* Rest of the component remains unchanged */}
       {/* Practice Section */}
       <section className="py-12 bg-gray-100">
         <div className="container mx-auto px-4">

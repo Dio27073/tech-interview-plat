@@ -12,7 +12,7 @@
     "@aws-sdk/client-dynamodb": "^3.751.0",
     "@aws-sdk/lib-dynamodb": "^3.751.0",
     "@monaco-editor/react": "^4.7.0",
-    "aws-amplify": "^6.13.1",
+    "aws-amplify": "^6.0.0",
     "axios": "^1.7.9",
     "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.1",

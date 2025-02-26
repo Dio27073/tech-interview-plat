@@ -25,10 +25,13 @@ export function generateStaticParams(): { categoryId: string }[] {
   }));
 }
 
-// Page component
-export default function CategoryPage({ params }: { params: { categoryId: string } }) {
+// Page component - now with async
+export default async function CategoryPage({ params }: { params: { categoryId: string } }) {
+  // Extract categoryId from params - now with await
+  const { categoryId } = await params;
+  
   // Find the category by ID
-  const category = curriculumData.find(cat => cat.id === params.categoryId);
+  const category = curriculumData.find(cat => cat.id === categoryId);
   
   // Return 404 if category not found
   if (!category) {

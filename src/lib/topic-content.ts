@@ -1,66 +1,73 @@
 // src/lib/topic-content.ts
 
-// Define types for various content blocks
+// Import Amplify auth functions
+import { getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 
+// Import our API service
+import { fetchTopic, saveTopic, deleteTopic } from './api-service';
 
+// Type definitions unchanged...
 export type CodeExample = {
-    language: string;
-    code: string;
-    description?: string;
+  language: string;
+  code: string;
+  description?: string;
+};
+
+export type ImageContent = {
+  src: string;
+  alt: string;
+  caption?: string;
+};
+
+export type ContentSection = {
+  type: 'paragraph' | 'code' | 'list' | 'image' | 'callout';
+  title?: string;
+  content: string | string[] | CodeExample | ImageContent;
+};
+
+export type TopicContent = {
+  id: string;
+  title: string;
+  introduction: string;
+  learningObjectives: string[];
+  sections: ContentSection[];
+  quiz?: {
+    questions: {
+      question: string;
+      options: string[];
+      correctAnswer: number;
+      explanation: string;
+    }[];
   };
-  
-  export type ImageContent = {
-    src: string;
-    alt: string;
-    caption?: string;
-  };
-  
-  export type ContentSection = {
-    type: 'paragraph' | 'code' | 'list' | 'image' | 'callout';
-    title?: string;
-    content: string | string[] | CodeExample | ImageContent;
-  };
-  
-  export type TopicContent = {
+  relatedResources: {
+    title: string;
+    url: string;
+    type: 'article' | 'video' | 'practice' | 'documentation';
+  }[];
+  nextTopic?: {
     id: string;
     title: string;
-    introduction: string;
-    learningObjectives: string[];
-    sections: ContentSection[];
-    quiz?: {
-      questions: {
-        question: string;
-        options: string[];
-        correctAnswer: number;
-        explanation: string;
-      }[];
-    };
-    relatedResources: {
-      title: string;
-      url: string;
-      type: 'article' | 'video' | 'practice' | 'documentation';
-    }[];
-    nextTopic?: {
-      id: string;
-      title: string;
-    };
-    previousTopic?: {
-      id: string;
-      title: string;
-    };
   };
-  
-  // Sample content for "For Loops" topic
-  export const forLoopsContent: TopicContent = {
-    id: 'for-loops',
-    title: 'For Loops',
-    introduction: 'For loops are one of the most common control structures in programming, allowing you to execute a block of code repeatedly for a specific number of iterations.',
-    learningObjectives: [
-      'Understand the basic structure of for loops',
-      'Learn how to use for loops to iterate over arrays and collections',
-      'Master common for loop patterns and best practices',
-      'Avoid common pitfalls like off-by-one errors'
-    ],
+  previousTopic?: {
+    id: string;
+    title: string;
+  };
+  lastUpdated?: number; // Timestamp for tracking updates
+  userId?: string; // To track which user made the update
+  chapterId?: string; // Add chapterId to track which chapter this topic belongs to
+};
+
+// Sample content for "For Loops" topic
+export const forLoopsContent: TopicContent = {
+  id: 'for-loops',
+  title: 'For Loops',
+  introduction: 'For loops are one of the most common control structures in programming, allowing you to execute a block of code repeatedly for a specific number of iterations.',
+  learningObjectives: [
+    'Understand the basic structure of for loops',
+    'Learn how to use for loops to iterate over arrays and collections',
+    'Master common for loop patterns and best practices',
+    'Avoid common pitfalls like off-by-one errors'
+  ],
     sections: [
       {
         type: 'paragraph',
@@ -336,49 +343,142 @@ export type CodeExample = {
     }
   };
   
-// Content registry - map all topic IDs to their content
-export const topicContentRegistry: Record<string, TopicContent> = {
-  'for-loops': forLoopsContent,
-  'while-loops': whileLoopsContent,
-  // Add more topics as needed
-};
-
-// Function to get topic content by ID with local storage support
-export function getTopicContent(topicId: string): TopicContent | null {
-  // Try to get from local storage first (client-side only)
-  if (typeof window !== 'undefined') {
+  export const topicContentRegistry: Record<string, TopicContent> = {
+    'for-loops': forLoopsContent,
+    'while-loops': whileLoopsContent,
+    // Add more topics as needed
+  };
+  
+  /**
+   * Fetch topic content from the API
+   * Falls back to registry data if server fetch fails or if running on server
+   */
+  export async function getTopicContent(topicId: string, chapterId?: string): Promise<TopicContent | null> {
+    // First try local storage for immediate rendering with cached data
+    if (typeof window !== 'undefined') {
+      try {
+        const localContent = localStorage.getItem(`topic-content-${topicId}`);
+        if (localContent) {
+          // Parse and use local storage data for immediate display
+          const parsedContent = JSON.parse(localContent) as TopicContent;
+          
+          // Fetch from API in the background to get the latest version
+          fetchFromApiInBackground(topicId, chapterId);
+          
+          return parsedContent;
+        }
+      } catch (error) {
+        console.error('Error retrieving content from local storage:', error);
+      }
+    }
+    
+    // Try to get from API
     try {
-      const localContent = localStorage.getItem(`topic-content-${topicId}`);
-      if (localContent) {
-        return JSON.parse(localContent);
+      // Use our API service to fetch data
+      const content = await fetchTopic(topicId, chapterId);
+      if (content) {
+        // If successful, also cache in localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`topic-content-${topicId}`, JSON.stringify(content));
+        }
+        return content;
       }
     } catch (error) {
-      console.error('Error retrieving content from local storage:', error);
+      console.error('Error fetching content from API:', error);
+      // Failed to fetch from API, fall back to registry
     }
+    
+    // Fall back to the registry
+    return topicContentRegistry[topicId] || null;
   }
   
-  // Fall back to the registry
-  return topicContentRegistry[topicId] || null;
-}
-
-// Function to save topic content to local storage
-export function saveTopicContent(content: TopicContent): void {
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.setItem(`topic-content-${content.id}`, JSON.stringify(content));
-    } catch (error) {
-      console.error('Error saving content to local storage:', error);
-    }
+  /**
+   * Fetch from API in the background without blocking rendering
+   */
+  function fetchFromApiInBackground(topicId: string, chapterId?: string): void {
+    (async () => {
+      try {
+        // Use the API service
+        const content = await fetchTopic(topicId, chapterId);
+        if (content && typeof window !== 'undefined') {
+          localStorage.setItem(`topic-content-${topicId}`, JSON.stringify(content));
+        }
+      } catch (error) {
+        console.error('Background fetch error:', error);
+      }
+    })();
   }
-}
-
-// Function to reset topic content to original
-export function resetTopicContent(topicId: string): void {
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.removeItem(`topic-content-${topicId}`);
-    } catch (error) {
-      console.error('Error removing content from local storage:', error);
+  
+  async function getCurrentUserId(): Promise<string | undefined> {
+    if (typeof window !== 'undefined') {
+      try {
+        // Get the current authenticated user from Cognito using Amplify v6
+        const currentUser = await getCurrentUser();
+        return currentUser.userId;
+      } catch (error) {
+        console.error('Error getting user ID from Cognito:', error);
+        return undefined;
+      }
     }
+    return undefined;
   }
-}
+  
+  export async function saveTopicContent(content: TopicContent): Promise<boolean> {
+    // First save to localStorage as a backup
+    if (typeof window !== 'undefined') {
+      try {
+        // Get user ID asynchronously
+        const userId = await getCurrentUserId();
+        
+        // Add timestamp and user ID
+        const updatedContent = {
+          ...content,
+          lastUpdated: Date.now(),
+          userId
+        };
+        
+        localStorage.setItem(`topic-content-${content.id}`, JSON.stringify(updatedContent));
+        
+        // Then save to API using our API service
+        const success = await saveTopic(updatedContent);
+        return success;
+      } catch (error) {
+        console.error('Error saving content:', error);
+        return false;
+      }
+    }
+    return false;
+  }
+  
+  export async function resetTopicContent(topicId: string): Promise<boolean> {
+    // Remove from localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(`topic-content-${topicId}`);
+      } catch (error) {
+        console.error('Error removing content from local storage:', error);
+      }
+    }
+    
+    // Reset on the server by sending the original content
+    const originalContent = topicContentRegistry[topicId];
+    if (originalContent) {
+      try {
+        // Get user ID asynchronously
+        const userId = await getCurrentUserId();
+        
+        // Use our API service
+        const success = await saveTopic({
+          ...originalContent,
+          lastUpdated: Date.now(),
+          userId
+        });
+        return success;
+      } catch (error) {
+        console.error('Error resetting content on server:', error);
+        return false;
+      }
+    }
+    
+    return false;
+  }

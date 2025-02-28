@@ -1,4 +1,4 @@
-//chapters/[chapterId]/topics/[topicId]/page.tsx
+// chapters/[chapterId]/topics/[topicId]/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -7,16 +7,16 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { curriculumData } from '@/lib/curriculum-data';
 import { 
-  type TopicContent as TopicContentType, 
-  saveTopicContent,
-  resetTopicContent
+  type TopicContent as TopicContentType,
 } from '@/lib/topic-content';
+
+// Import our custom hook
+import { useTopicData } from '@/hooks/useTopicData';
 
 // Import helper functions
 import { 
   findChapterById, 
-  findTopicByIdInChapter, 
-  loadTopicContent 
+  findTopicByIdInChapter
 } from './helpers/topic-helpers';
 
 // Import components
@@ -28,8 +28,6 @@ import RelatedResources from './components/RelatedResources';
 
 export default function TopicPage({ params }: { params: { chapterId: string; topicId: string } }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [currentContent, setCurrentContent] = useState<TopicContentType | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [chapterInfo, setChapterInfo] = useState<{ chapter: any; categoryId: string } | null>(null);
   const [category, setCategory] = useState<any>(null);
   const [topicName, setTopicName] = useState<string | undefined>(undefined);
@@ -39,9 +37,18 @@ export default function TopicPage({ params }: { params: { chapterId: string; top
   const chapterId = unwrappedParams.chapterId;
   const topicId = unwrappedParams.topicId;
   
-  // Load chapter and topic data
+  // Use our custom hook to fetch topic data from API
+  const { 
+    topicContent, 
+    isLoading: isTopicLoading, 
+    error: topicError,
+    saveContent,
+    resetContent
+  } = useTopicData(topicId);
+  
+  // Load chapter and topic metadata
   useEffect(() => {
-    console.log("Loading data for:", chapterId, topicId);
+    console.log("Loading metadata for:", chapterId, topicId);
     
     // Find the chapter by ID
     const loadedChapterInfo = findChapterById(chapterId);
@@ -56,51 +63,82 @@ export default function TopicPage({ params }: { params: { chapterId: string; top
       const loadedTopicName = findTopicByIdInChapter(loadedChapterInfo.chapter, topicId);
       console.log("Topic name:", loadedTopicName);
       setTopicName(loadedTopicName);
-      
-      // Get the content
-      const topicContent = loadTopicContent(topicId, loadedTopicName || 'Unknown Topic');
-      console.log("Topic content:", topicContent);
-      setCurrentContent(topicContent);
-      setIsLoading(false);
     }
   }, [chapterId, topicId]);
 
   // Handle 404 cases when data loads
   useEffect(() => {
-    if (!isLoading) {
-      if (!chapterInfo || !topicName) {
+    if (!isTopicLoading) {
+      if (!chapterInfo) {
         notFound();
       }
     }
-  }, [isLoading, chapterInfo, topicName]);
+  }, [isTopicLoading, chapterInfo]);
 
-  const handleSaveContent = (updatedContent: TopicContentType) => {
-    // Save to local storage
-    saveTopicContent(updatedContent);
-    setCurrentContent(updatedContent);
-    setIsEditing(false);
-    
-    // Show success message
-    alert('Content updated successfully! Your changes have been saved.');
+  const handleSaveContent = async (updatedContent: TopicContentType) => {
+    try {
+      // Add chapter ID to the content before saving
+      const contentWithChapter = {
+        ...updatedContent,
+        chapterId: chapterId
+      };
+      
+      // Save via our custom hook (which handles API and local storage)
+      await saveContent(contentWithChapter);
+      setIsEditing(false);
+      
+      // Show success message
+      alert('Content updated successfully! Your changes have been saved.');
+    } catch (error) {
+      console.error('Error saving content:', error);
+      alert('Failed to save content. Please try again.');
+    }
   };
 
   const handleResetContent = () => {
     if (confirm('Are you sure you want to reset this topic to its original content? All your changes will be lost.')) {
-      resetTopicContent(topicId);
-      
-      // Reload the original content
-      const originalContent = loadTopicContent(topicId, topicName || 'Unknown Topic');
-      setCurrentContent(originalContent);
+      resetContent();
       setIsEditing(false);
       alert('Content has been reset to the original version.');
     }
   };
 
   // Show loading state
-  if (isLoading || !currentContent || !chapterInfo || !category) {
+  const isLoading = isTopicLoading || !chapterInfo;
+  if (isLoading || !topicContent || !category) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (topicError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 w-full max-w-xl">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">
+                Error loading topic content: {topicError.message}
+              </p>
+              <p className="mt-2 text-sm text-red-700">
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="underline"
+                >
+                  Reload page
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -112,7 +150,7 @@ export default function TopicPage({ params }: { params: { chapterId: string; top
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="max-w-5xl w-full max-h-screen overflow-y-auto">
             <TopicContentEditor 
-              content={currentContent}
+              content={topicContent}
               onSave={handleSaveContent}
               onCancel={() => setIsEditing(false)}
               onReset={handleResetContent}
@@ -133,17 +171,17 @@ export default function TopicPage({ params }: { params: { chapterId: string; top
       {/* Content Section */}
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-        <TopicContent content={currentContent} />
+          <TopicContent content={topicContent} />
 
           {/* Navigation buttons */}
           <NavigationButtons 
             chapterId={chapterId}
-            previousTopic={currentContent.previousTopic}
-            nextTopic={currentContent.nextTopic}
+            previousTopic={topicContent.previousTopic}
+            nextTopic={topicContent.nextTopic}
           />
 
           {/* Related resources */}
-          <RelatedResources resources={currentContent.relatedResources} />
+          <RelatedResources resources={topicContent.relatedResources} />
         </div>
       </div>
 

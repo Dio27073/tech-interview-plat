@@ -1,6 +1,9 @@
 // src/app/chapters/[chapterId]/page.tsx
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { curriculumData, type Chapter } from '@/lib/curriculum-data';
 
 // Function to find a chapter by ID across all categories
@@ -19,17 +22,6 @@ const topicToSlug = (topic: string): string => {
   return topic.toLowerCase().replace(/\s+/g, '-');
 };
 
-// Generate static params for all chapters
-export function generateStaticParams() {
-  const params: { chapterId: string }[] = [];
-  curriculumData.forEach(category => {
-    category.chapters.forEach(chapter => {
-      params.push({ chapterId: chapter.id });
-    });
-  });
-  return params;
-}
-
 // Badge component for difficulty levels
 const DifficultyBadge = ({ level }: { level: Chapter['difficultyLevel'] }) => {
   const colors = {
@@ -45,25 +37,56 @@ const DifficultyBadge = ({ level }: { level: Chapter['difficultyLevel'] }) => {
   );
 };
 
-export default function ChapterPage({ params }: { params: { chapterId: string } }) {
-  // Find the chapter by ID
-  const chapterInfo = findChapterById(params.chapterId);
-  
+export default function ChapterPage() {
+  const params = useParams();
+  const [chapterInfo, setChapterInfo] = useState<{ chapter: Chapter; categoryId: string } | null>(null);
+  const [category, setCategory] = useState<any>(null);
+  const [topicDetails, setTopicDetails] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (params && params.chapterId) {
+      const chapterId = params.chapterId as string;
+      
+      // Find the chapter by ID
+      const foundChapterInfo = findChapterById(chapterId);
+      setChapterInfo(foundChapterInfo);
+      
+      if (foundChapterInfo) {
+        const foundCategory = curriculumData.find(cat => cat.id === foundChapterInfo.categoryId);
+        setCategory(foundCategory);
+        
+        // Generate topic details
+        const details = foundChapterInfo.chapter.topics.map(topic => ({
+          id: topicToSlug(topic),
+          title: topic,
+          description: `Learn all about ${topic} in this comprehensive lesson.`,
+          estimatedTime: `${Math.floor(Math.random() * 30) + 15} mins` // Mock time for demonstration
+        }));
+        
+        setTopicDetails(details);
+      }
+      
+      setLoading(false);
+    }
+  }, [params]);
+
   // Return 404 if chapter not found
-  if (!chapterInfo) {
-    notFound();
+  useEffect(() => {
+    if (!loading && !chapterInfo) {
+      notFound();
+    }
+  }, [loading, chapterInfo]);
+
+  if (loading || !chapterInfo || !category) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
-  
+
   const { chapter, categoryId } = chapterInfo;
-  const category = curriculumData.find(cat => cat.id === categoryId)!;
-  
-  // Mock topics data (this would come from your actual data source)
-  const topicDetails = chapter.topics.map(topic => ({
-    id: topicToSlug(topic),
-    title: topic,
-    description: `Learn all about ${topic} in this comprehensive lesson.`,
-    estimatedTime: `${Math.floor(Math.random() * 30) + 15} mins` // Mock time for demonstration
-  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -136,7 +159,7 @@ export default function ChapterPage({ params }: { params: { chapterId: string } 
                             {topic.estimatedTime}
                           </span>
                           <Link 
-                            href={`/topics/${chapter.id}/${topic.id}`}
+                            href={`/chapters/${chapter.id}/topics/${topic.id}`}
                             className="text-blue-600 hover:text-blue-800 font-medium"
                           >
                             Start Learning
@@ -202,24 +225,26 @@ export default function ChapterPage({ params }: { params: { chapterId: string } 
       </section>
 
       {/* Start Learning CTA */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto text-center">
-            <div className="bg-blue-700 text-white p-8 rounded-lg shadow-md">
-              <h2 className="text-3xl font-bold mb-4">Begin Your Learning Journey</h2>
-              <p className="text-xl mb-6">
-                Start with the first topic "{topicDetails[0].title}" to begin mastering {chapter.title}.
-              </p>
-              <Link 
-                href={`/topics/${chapter.id}/${topicDetails[0].id}`}
-                className="inline-block bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition duration-200"
-              >
-                Start First Topic
-              </Link>
+      {topicDetails.length > 0 && (
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            <div className="max-w-5xl mx-auto text-center">
+              <div className="bg-blue-700 text-white p-8 rounded-lg shadow-md">
+                <h2 className="text-3xl font-bold mb-4">Begin Your Learning Journey</h2>
+                <p className="text-xl mb-6">
+                  Start with the first topic "{topicDetails[0].title}" to begin mastering {chapter.title}.
+                </p>
+                <Link 
+                  href={`/chapters/${chapter.id}/topics/${topicDetails[0].id}`}
+                  className="inline-block bg-white text-blue-700 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition duration-200"
+                >
+                  Start First Topic
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="py-8 bg-gray-900 text-gray-400">

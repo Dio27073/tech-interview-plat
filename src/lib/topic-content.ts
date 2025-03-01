@@ -19,6 +19,36 @@ export type ContentSection = {
   content: string | string[] | CodeExample | ImageContent;
 };
 
+export interface PracticeProblem {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  language: string;
+  starterCode?: string;
+  solution?: string;
+  solutionExplanation?: string;
+  solutionKeywords?: string; // For simple validation
+  hints?: string[];
+  examples?: string[];
+
+  testCases?: {
+    input: string;
+    expectedOutput: string;
+  }[];
+}
+
+export interface PyodideTestCase {
+  input: any;
+  expected: any;
+  name: string;
+}
+
+export interface ProblemWithPyodideTests extends PracticeProblem {
+  pyodideTestCases?: PyodideTestCase[];
+}
+
+// Updated TopicContent interface
 export type TopicContent = {
   id: string;
   title: string;
@@ -47,6 +77,8 @@ export type TopicContent = {
     title: string;
   };
   chapterId?: string; // Added to store the chapter this topic belongs to
+  updatedAt?: string;
+  practiceProblems?: PracticeProblem[]; // New field for practice problems
 };
 
 // Initially empty content registry - will be populated from the database

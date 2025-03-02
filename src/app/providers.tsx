@@ -1,16 +1,17 @@
 'use client';
 
-import { useEffect } from 'react';
-import '@/config/auth';  // Import the Amplify configuration
+import React from 'react';
+import { PyodideProvider } from './providers/PyodideProvider';
+// Import any other providers you have
 
-interface ProvidersProps {
-  children: React.ReactNode;
-}
-
-export function Providers({ children }: ProvidersProps) {
-  useEffect(() => {
-    // Any additional client-side initialization can go here
-  }, []);
-
-  return <>{children}</>;
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      {/* Explicitly set preload to true for PyodideProvider */}
+      <PyodideProvider preload={true}>
+        {/* Your other providers go here */}
+        {children}
+      </PyodideProvider>
+    </>
+  );
 }

@@ -5,6 +5,7 @@ import ContentSectionRenderer from './ContentSectionRenderer';
 import QuizSection from './QuizSection';
 import InteractiveExample from './InteractiveExample';
 import PracticeProblemsSection from './PracticeProblemsSection';
+import { RichTextDisplay } from '@/components/RichTextEditor';
 
 interface TopicContentProps {
   content: TopicContentInterface;
@@ -12,7 +13,7 @@ interface TopicContentProps {
 
 const TopicContent: React.FC<TopicContentProps> = ({ content }) => {
   const [activeTab, setActiveTab] = useState<'content' | 'practice'>('content');
-
+  
   return (
     <div className="bg-white shadow-sm rounded-lg p-8 mb-8">
       <h1 className="text-3xl font-bold mb-6">{content.title}</h1>
@@ -49,7 +50,10 @@ const TopicContent: React.FC<TopicContentProps> = ({ content }) => {
           {/* Introduction */}
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">Introduction</h2>
-            <p className="text-gray-700 mb-4">{content.introduction}</p>
+            <div className="text-gray-700 mb-4">
+              {/* Use RichTextDisplay component to render HTML content */}
+              <RichTextDisplay content={content.introduction || ''} />
+            </div>
             
             <div className="bg-blue-50 border-l-4 border-blue-500 p-4 my-4">
               <p className="text-sm text-blue-700">

@@ -4,6 +4,7 @@ import {
   type TopicContent,
 } from '@/lib/topic-content';
 import ContentSectionRenderer from './ContentSectionRenderer';
+import RichTextEditor from '@/components/RichTextEditor';
 
 interface TopicContentEditorProps {
   content: TopicContent;
@@ -39,7 +40,10 @@ const TopicContentEditor: React.FC<TopicContentEditorProps> = ({
     
     switch(type) {
       case 'paragraph':
-        newSection = { type, content: 'New paragraph content' };
+        newSection = { 
+          type, 
+          content: '<p>New paragraph content</p>' // Now using HTML format for rich text
+        };
         break;
       case 'code':
         newSection = { 
@@ -55,10 +59,14 @@ const TopicContentEditor: React.FC<TopicContentEditorProps> = ({
         newSection = { type, content: ['Item 1', 'Item 2', 'Item 3'] };
         break;
       case 'callout':
-        newSection = { type, title: 'Note', content: 'Important information goes here' };
+        newSection = { 
+          type, 
+          title: 'Note', 
+          content: '<p>Important information goes here</p>' // Now using HTML format for rich text
+        };
         break;
       default:
-        newSection = { type: 'paragraph', content: 'New content' };
+        newSection = { type: 'paragraph', content: '<p>New content</p>' };
     }
     
     setEditedContent({
@@ -121,10 +129,11 @@ const TopicContentEditor: React.FC<TopicContentEditorProps> = ({
       
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-2">Introduction</label>
-        <textarea 
-          value={editedContent.introduction || ''} 
-          onChange={(e) => setEditedContent({...editedContent, introduction: e.target.value})}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md min-h-24"
+        <RichTextEditor
+          initialContent={editedContent.introduction || ''}
+          onChange={(htmlContent) => 
+            setEditedContent({...editedContent, introduction: htmlContent})
+          }
         />
       </div>
       

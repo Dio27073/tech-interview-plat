@@ -4,6 +4,7 @@ import {
   type CodeExample, 
   type ImageContent 
 } from '@/lib/topic-content';
+import { Highlight, themes } from 'prism-react-renderer';
 
 interface ContentSectionRendererProps {
   section: ContentSection; 
@@ -61,64 +62,79 @@ const ContentSectionRenderer: React.FC<ContentSectionRendererProps> = ({
         </div>
       );
       
-    case 'code':
-      const codeExample = section.content as CodeExample;
-      return (
-        <div className="mb-6">
-          {isEditing ? (
-            <>
-              <input
-                type="text"
-                value={section.title || ''}
-                onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="Section Title"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2 text-xl font-semibold"
-              />
-              <input
-                type="text"
-                value={codeExample.language}
-                onChange={(e) => {
-                  const updatedExample = { ...codeExample, language: e.target.value };
-                  handleContentChange(updatedExample);
-                }}
-                placeholder="Language (e.g., javascript, python)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
-              />
-              <textarea
-                value={codeExample.code}
-                onChange={(e) => {
-                  const updatedExample = { ...codeExample, code: e.target.value };
-                  handleContentChange(updatedExample);
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm min-h-48 mb-2"
-                placeholder="// Enter code here"
-              />
-              <input
-                type="text"
-                value={codeExample.description || ''}
-                onChange={(e) => {
-                  const updatedExample = { ...codeExample, description: e.target.value };
-                  handleContentChange(updatedExample);
-                }}
-                placeholder="Description (optional)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-            </>
-          ) : (
-            <>
-              {section.title && <h3 className="text-xl font-semibold mb-3">{section.title}</h3>}
-              <div className="bg-gray-800 text-white p-4 rounded-md my-4 overflow-x-auto">
-                <pre className="text-sm">
-                  <code>{codeExample.code}</code>
-                </pre>
-              </div>
-              {codeExample.description && (
-                <p className="text-sm text-gray-600 mt-2">{codeExample.description}</p>
-              )}
-            </>
-          )}
-        </div>
-      );
+      case 'code':
+        const codeExample = section.content as CodeExample;
+        return (
+          <div className="mb-6">
+            {isEditing ? (
+              // Editing mode remains the same...
+              <>
+                <input
+                  type="text"
+                  value={section.title || ''}
+                  onChange={(e) => handleTitleChange(e.target.value)}
+                  placeholder="Section Title"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2 text-xl font-semibold"
+                />
+                <input
+                  type="text"
+                  value={codeExample.language}
+                  onChange={(e) => {
+                    const updatedExample = { ...codeExample, language: e.target.value };
+                    handleContentChange(updatedExample);
+                  }}
+                  placeholder="Language (e.g., javascript, python)"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
+                />
+                <textarea
+                  value={codeExample.code}
+                  onChange={(e) => {
+                    const updatedExample = { ...codeExample, code: e.target.value };
+                    handleContentChange(updatedExample);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm min-h-48 mb-2"
+                  placeholder="// Enter code here"
+                />
+                <input
+                  type="text"
+                  value={codeExample.description || ''}
+                  onChange={(e) => {
+                    const updatedExample = { ...codeExample, description: e.target.value };
+                    handleContentChange(updatedExample);
+                  }}
+                  placeholder="Description (optional)"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </>
+            ) : (
+              <>
+                {section.title && <h3 className="text-xl font-semibold mb-3">{section.title}</h3>}
+                <div className="rounded-md my-4 overflow-x-auto">
+                  <Highlight
+                    theme={themes.vsDark}
+                    code={codeExample.code}
+                    language={codeExample.language || 'python'}
+                  >
+                    {({ className, style, tokens, getLineProps, getTokenProps }) => (
+                      <pre className={`${className} p-4 text-sm`} style={style}>
+                        {tokens.map((line, i) => (
+                          <div key={i} {...getLineProps({ line })}>
+                            {line.map((token, key) => (
+                              <span key={key} {...getTokenProps({ token })} />
+                            ))}
+                          </div>
+                        ))}
+                      </pre>
+                    )}
+                  </Highlight>
+                </div>
+                {codeExample.description && (
+                  <p className="text-sm text-gray-600 mt-2">{codeExample.description}</p>
+                )}
+              </>
+            )}
+          </div>
+        );
       
     case 'list':
       return (

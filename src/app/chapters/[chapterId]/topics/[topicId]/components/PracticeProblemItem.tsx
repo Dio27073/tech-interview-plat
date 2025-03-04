@@ -327,17 +327,32 @@ print("Result:", result)
               </button>
             </div>
             
-            {/* Feedback message */}
-            {feedback && (
-              <div className={`mt-4 p-3 rounded whitespace-pre-line font-mono text-sm ${
-                feedback.includes('✅') ? 'bg-green-50 text-green-800' : 
-                feedback.includes('⏳') ? 'bg-blue-50 text-blue-800' :
-                feedback.includes('⚠️') ? 'bg-yellow-50 text-yellow-800' : 
-                'bg-red-50 text-red-800'
-              }`}>
-                {feedback}
+            {/* Terminal-style output box */}
+            <div className="mt-4">
+              <h4 className="text-md font-medium mb-2">Output:</h4>
+              <div className="bg-gray-800 text-white p-3 rounded font-mono h-40 overflow-y-auto whitespace-pre-wrap">
+                {feedback ? (
+                  <span className={
+                    feedback.includes('✅') ? 'text-green-400' : 
+                    feedback.includes('⏳') ? 'text-blue-400' :
+                    feedback.includes('⚠️') ? 'text-yellow-400' : 
+                    'text-red-400'
+                  }>
+                    {feedback}
+                  </span>
+                ) : (
+                  <span className="text-gray-400">Run your code to see the output</span>
+                )}
+                
+                {/* Show execution result output if available */}
+                {execResult && execResult.output && !feedback?.includes(execResult.output) && (
+                  <div className="mt-2 pt-2 border-t border-gray-600">
+                    <span className="text-gray-400">Raw output:</span>
+                    <pre className="mt-1">{execResult.output}</pre>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
           
           {/* Hint */}

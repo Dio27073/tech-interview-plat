@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Data Structures & Algorithms Study Platform
 
-## Getting Started
+A comprehensive, interactive learning platform for mastering data structures and algorithms through structured content and hands-on practice.
 
-First, run the development server:
+## 📚 Overview
+
+This serverless application provides a course-like experience for learning data structures and algorithms, featuring chapter-based content, interactive coding exercises, personalized note-taking, and detailed progress tracking.
+
+## 🎯 Core Features
+
+- **Structured Learning Path**: Progress through organized chapters from basics to advanced concepts
+- **Interactive Coding**: Practice in an integrated code editor with real-time feedback
+- **Personalized Study Tools**: Take notes, generate study guides, and track your progress
+- **Performance Analytics**: Identify strengths and areas for improvement
+
+## 🏗️ Architecture
+
+Built on AWS serverless technologies to minimize operational costs and maximize scalability:
+
+- **Frontend**: React with Monaco Editor for code editing
+- **Backend**: AWS Lambda, API Gateway, DynamoDB, S3, and Cognito
+- **Visualization**: D3.js/Chart.js for data and algorithm visualization
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (v14+)
+- AWS CLI configured with appropriate permissions
+- Serverless Framework (optional, for deployment)
+
+### Local Development
 
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/ds-algo-platform.git
+cd ds-algo-platform
+
+# Install dependencies
+npm install
+
+# Start local development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000` to access the development version.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Deploy to AWS
+npm run deploy
+```
 
-## Learn More
+## 🔍 User Journey
 
-To learn more about Next.js, take a look at the following resources:
+1. **Sign Up & Assessment**
+   - Create an account
+   - Complete optional skill assessment
+   - Receive personalized curriculum
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Learn & Practice**
+   - Study theoretical content with visual examples
+   - Practice concepts in the integrated code editor
+   - Receive immediate feedback on solutions
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Review & Improve**
+   - Take notes on challenging topics
+   - Track progress and identify weak areas
+   - Review based on spaced repetition recommendations
 
-## Deploy on Vercel
+## 📋 Content Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Section | Topics Covered |
+|---------|----------------|
+| Basics | Arrays, Loops, Conditionals |
+| Data Structures | Linked Lists, Stacks, Queues, Trees, Graphs |
+| Algorithms | Sorting, Searching, Dynamic Programming |
+| Advanced | Greedy Algorithms, Graph Algorithms |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🔧 Technical Features
+
+- **Code Execution**: Secure sandbox environment for running code
+- **Test Cases**: Automated validation for all practice exercises
+- **Data Persistence**: Save progress and notes across sessions
+- **Exportable Notes**: Download personal notes for offline study
+
+## 📈 Development Roadmap
+
+### Phase 1: Foundation (Current)
+- Core authentication and user profiles
+- Basic chapter structure
+- Code editor integration
+
+### Phase 2: Enhanced Features
+- Comprehensive exercise library
+- Note-taking system
+- Progress visualization
+
+### Phase 3: Advanced Capabilities
+- Algorithm visualizations
+- AI-powered learning recommendations
+- Performance optimization
+
+## 🤝 Contributing
+
+Contributions are welcome! Please check the [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📞 Contact
+
+For questions or feedback, please [open an issue](https://github.com/yourusername/ds-algo-platform/issues) or contact the maintainers directly.
+
+---
+
+Built for learners passionate about mastering data structures and algorithms

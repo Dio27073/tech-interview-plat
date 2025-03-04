@@ -1,9 +1,8 @@
-// src/app/chapters/[chapterId]/topics/[topicId]/components/TopicContent.tsx
 import React, { useState } from 'react';
 import { type TopicContent as TopicContentInterface } from '@/lib/topic-content';
 import ContentSectionRenderer from './ContentSectionRenderer';
 import QuizSection from './QuizSection';
-import InteractiveExample from './InteractiveExample';
+import InteractiveExamplesContainer from './InteractiveExamplesContainer';
 import PracticeProblemsSection from './PracticeProblemsSection';
 import { RichTextDisplay } from '@/components/RichTextEditor';
 
@@ -81,8 +80,11 @@ const TopicContent: React.FC<TopicContentProps> = ({ content }) => {
           {/* Quiz Section (if available) */}
           {content.quiz && <QuizSection quiz={content.quiz} />}
           
-          {/* Interactive example */}
-          <InteractiveExample topicTitle={content.title} />
+          {/* Interactive examples - Now using the container component */}
+          <InteractiveExamplesContainer
+            topicTitle={content.title}
+            topicId={content.id}
+          />
         </>
       )}
       

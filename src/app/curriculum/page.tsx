@@ -210,7 +210,7 @@ export default function CurriculumPage() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <h3 className="text-white font-bold text-lg mb-4">DSA Master</h3>
+              <h3 className="text-white font-bold text-lg mb-4">Codementa</h3>
               <p className="text-sm leading-relaxed">
                 The most comprehensive platform for mastering data structures and algorithms through interactive
                 learning.
@@ -292,7 +292,7 @@ export default function CurriculumPage() {
           </div>
 
           <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm mb-4 md:mb-0">&copy; {new Date().getFullYear()} DSA Master. All rights reserved.</p>
+            <p className="text-sm mb-4 md:mb-0">&copy; {new Date().getFullYear()} Codementa. All rights reserved.</p>
             <div className="flex items-center gap-4 text-sm">
               <span>Made with ❤️ for developers</span>
             </div>

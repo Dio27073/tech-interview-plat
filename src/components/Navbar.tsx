@@ -61,7 +61,7 @@ const Navbar = () => {
                   <Zap className="h-6 w-6 text-white" />
                 </div>
                 <span className="font-bold text-xl bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                  DSA Master
+                  Codementa
                 </span>
               </Link>
             </div>

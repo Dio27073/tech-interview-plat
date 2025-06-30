@@ -9,7 +9,6 @@ import {
   confirmSignUp, 
   getCurrentUser, 
   type AuthUser,
-  type SignUpInput
 } from 'aws-amplify/auth';
 
 interface UseAuthReturn {

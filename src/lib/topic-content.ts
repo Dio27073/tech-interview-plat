@@ -39,8 +39,8 @@ export interface PracticeProblem {
 }
 
 export interface PyodideTestCase {
-  input: any;
-  expected: any;
+  input: unknown;
+  expected: unknown;
   name: string;
 }
 

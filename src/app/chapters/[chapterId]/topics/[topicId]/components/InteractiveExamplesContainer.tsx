@@ -14,7 +14,6 @@ const InteractiveExamplesContainer: React.FC<InteractiveExamplesContainerProps> 
   const [examples, setExamples] = useState<ExampleType[]>(getInteractiveExamples(topicId || ''));
   const [activeExampleId, setActiveExampleId] = useState<string>('');
   const [activeExample, setActiveExample] = useState<ExampleType | null>(null);
-  const [isPyodideReady, setIsPyodideReady] = useState<boolean>(false);
 
   useEffect(() => {
     // Get examples when topicId changes

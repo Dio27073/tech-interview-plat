@@ -38,7 +38,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   height = "400px",
   readOnly = false,
   theme = "vs-dark",
-  placeholder = "# Write your Python code here"
 }) => {
   // Map common language names to Monaco editor language IDs
   const getMonacoLanguage = (lang: string): string => {

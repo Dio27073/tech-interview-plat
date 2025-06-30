@@ -115,11 +115,9 @@ export function useTopicData(topicId: string): UseTopicDataReturn {
       saveTopicContent(finalContent);
       
       // Then try to update in AWS
-      let apiUpdateSuccessful = false;
       try {
         const response = await updateTopic(finalContent.id, finalContent);
         console.log('AWS update response:', response);
-        apiUpdateSuccessful = true;
       } catch (err) {
         console.warn('Failed to update topic in AWS, saved locally only:', err);
         // Continue with local state update even if AWS update fails

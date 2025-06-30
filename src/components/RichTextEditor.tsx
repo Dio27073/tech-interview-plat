@@ -5,7 +5,6 @@ import {
   $getRoot,
   $getSelection,
   $isRangeSelection,
-  createEditor,
   FORMAT_TEXT_COMMAND,
   EditorState,
 } from 'lexical';
@@ -49,7 +48,7 @@ const editorConfig = {
 
 // Simple functional error boundary
 function LexicalErrorBoundary({ children }: { children: React.ReactNode }) {
-  const [hasError, setHasError] = useState(false);
+  const [hasError] = useState(false);
   
   if (hasError) {
     return <div className="text-red-500 p-4">Something went wrong with the editor.</div>;

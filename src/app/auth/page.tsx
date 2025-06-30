@@ -1,7 +1,5 @@
 'use client';
 
-import React, { useEffect } from 'react';
-// import { useRouter } from 'next/navigation';
 import AuthForm from '@/components/AuthForm';
 // import { useAuth } from '@/hooks/useAuth';
 

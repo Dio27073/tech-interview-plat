@@ -30,7 +30,7 @@ const InteractiveExample: React.FC<InteractiveExampleProps> = ({ example }) => {
         // We can run a simple Python command to see if Pyodide is ready
         await executePythonCode('print("Pyodide check")', 2000);
         setIsPyodideReady(true);
-      } catch (error) {
+      } catch (_error) {
         console.log('Pyodide not ready yet, will retry');
         setTimeout(checkPyodideStatus, 1000);
       }

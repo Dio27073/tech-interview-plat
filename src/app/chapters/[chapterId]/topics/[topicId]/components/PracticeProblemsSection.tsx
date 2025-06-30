@@ -81,7 +81,7 @@ const PracticeProblemsSection: React.FC<PracticeProblemsSectionProps> = ({
     <div>
       <h2 className="text-2xl font-semibold mb-6">Practice Problems</h2>
       <p className="text-gray-600 mb-6">
-        Apply what you've learned by solving these practice problems. 
+        Apply what you&apos;ve learned by solving these practice problems. 
         Click on each problem to expand it and see the description, hints, and solution.
       </p>
       

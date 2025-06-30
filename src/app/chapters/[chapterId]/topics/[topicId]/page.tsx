@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { use } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { curriculumData } from '@/lib/curriculum-data';
+import { curriculumData, type Chapter, type CurriculumCategory } from '@/lib/curriculum-data';
 import { 
   type TopicContent as TopicContentType,
 } from '@/lib/topic-content';
@@ -28,8 +28,8 @@ import RelatedResources from './components/RelatedResources';
 
 export default function TopicPage({ params }: { params: Promise<{ chapterId: string; topicId: string }> }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [chapterInfo, setChapterInfo] = useState<{ chapter: any; categoryId: string } | null>(null);
-  const [category, setCategory] = useState<any>(null);
+  const [chapterInfo, setChapterInfo] = useState<{ chapter: Chapter; categoryId: string } | null>(null);
+  const [category, setCategory] = useState<CurriculumCategory | null>(null);
   const [topicName, setTopicName] = useState<string | undefined>(undefined);
 
   // Create memoized params to use in dependency array
@@ -56,7 +56,7 @@ export default function TopicPage({ params }: { params: Promise<{ chapterId: str
     setChapterInfo(loadedChapterInfo);
     
     if (loadedChapterInfo) {
-      const loadedCategory = curriculumData.find(cat => cat.id === loadedChapterInfo.categoryId);
+      const loadedCategory = curriculumData.find(cat => cat.id === loadedChapterInfo.categoryId) || null;
       console.log("Category:", loadedCategory);
       setCategory(loadedCategory);
       

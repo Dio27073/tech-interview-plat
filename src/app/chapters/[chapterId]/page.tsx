@@ -4,7 +4,15 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
-import { curriculumData, type Chapter } from '@/lib/curriculum-data';
+import { curriculumData, type Chapter, type CurriculumCategory } from '@/lib/curriculum-data';
+
+// Topic details interface
+interface TopicDetail {
+  id: string;
+  title: string;
+  description: string;
+  estimatedTime: string;
+}
 
 // Function to find a chapter by ID across all categories
 const findChapterById = (chapterId: string): { chapter: Chapter; categoryId: string } | null => {
@@ -40,8 +48,8 @@ const DifficultyBadge = ({ level }: { level: Chapter['difficultyLevel'] }) => {
 export default function ChapterPage() {
   const params = useParams();
   const [chapterInfo, setChapterInfo] = useState<{ chapter: Chapter; categoryId: string } | null>(null);
-  const [category, setCategory] = useState<any>(null);
-  const [topicDetails, setTopicDetails] = useState<any[]>([]);
+  const [category, setCategory] = useState<CurriculumCategory | null>(null);
+  const [topicDetails, setTopicDetails] = useState<TopicDetail[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,10 +62,10 @@ export default function ChapterPage() {
       
       if (foundChapterInfo) {
         const foundCategory = curriculumData.find(cat => cat.id === foundChapterInfo.categoryId);
-        setCategory(foundCategory);
+        setCategory(foundCategory || null);
         
         // Generate topic details
-        const details = foundChapterInfo.chapter.topics.map(topic => ({
+        const details: TopicDetail[] = foundChapterInfo.chapter.topics.map(topic => ({
           id: topicToSlug(topic),
           title: topic,
           description: `Learn all about ${topic} in this comprehensive lesson.`,
@@ -188,7 +196,7 @@ export default function ChapterPage() {
                   <h2 className="text-2xl font-bold mb-4">Ready to Practice?</h2>
                   <p className="text-gray-700 mb-4">
                     Test your knowledge of {chapter.title} with our interactive coding exercises. 
-                    Apply what you've learned and receive immediate feedback.
+                    Apply what you&apos;ve learned and receive immediate feedback.
                   </p>
                   <Link 
                     href={`/practice/${chapter.id}`}
@@ -232,7 +240,7 @@ export default function ChapterPage() {
               <div className="bg-blue-700 text-white p-8 rounded-lg shadow-md">
                 <h2 className="text-3xl font-bold mb-4">Begin Your Learning Journey</h2>
                 <p className="text-xl mb-6">
-                  Start with the first topic "{topicDetails[0].title}" to begin mastering {chapter.title}.
+                  Start with the first topic &ldquo;{topicDetails[0].title}&rdquo; to begin mastering {chapter.title}.
                 </p>
                 <Link 
                   href={`/chapters/${chapter.id}/topics/${topicDetails[0].id}`}

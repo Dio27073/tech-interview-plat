@@ -2,8 +2,14 @@
 
 // Define types for Pyodide
 interface PyodideInterface {
-  runPython: (code: string) => any;
-  globals: any;
+  runPython: (code: string) => unknown;
+  globals: Record<string, unknown>;
+}
+
+// Interface for Pyodide load options
+interface PyodideLoadOptions {
+  indexURL?: string;
+  [key: string]: unknown;
 }
 
 // Interface for execution result
@@ -22,13 +28,12 @@ export interface ExecutionResult {
 // Global types for Pyodide script
 declare global {
   interface Window {
-    loadPyodide: (options: any) => Promise<PyodideInterface>;
+    loadPyodide: (options: PyodideLoadOptions) => Promise<PyodideInterface>;
   }
 }
 
 // Loading state tracking
 let pyodideInstance: PyodideInterface | null = null;
-let isLoading = false;
 let loadingPromise: Promise<PyodideInterface> | null = null;
 
 /**
@@ -64,8 +69,6 @@ export async function getPyodide(): Promise<PyodideInterface> {
     return loadingPromise;
   }
 
-  isLoading = true;
-  
   loadingPromise = (async () => {
     try {
       // Load the script
@@ -103,8 +106,9 @@ export async function getPyodide(): Promise<PyodideInterface> {
       
       pyodideInstance = pyodide;
       return pyodide;
-    } finally {
-      isLoading = false;
+    } catch (error) {
+      loadingPromise = null; // Reset on error so we can retry
+      throw error;
     }
   })();
 
@@ -125,14 +129,14 @@ function clearOutput(pyodide: PyodideInterface): void {
  * Get captured stdout output
  */
 function getOutput(pyodide: PyodideInterface): string {
-  return pyodide.runPython("sys.stdout.getvalue()");
+  return pyodide.runPython("sys.stdout.getvalue()") as string;
 }
 
 /**
  * Get captured stderr output
  */
 function getErrorOutput(pyodide: PyodideInterface): string {
-  return pyodide.runPython("sys.stderr.getvalue()");
+  return pyodide.runPython("sys.stderr.getvalue()") as string;
 }
 
 /**
@@ -192,11 +196,10 @@ export async function executePythonCode(
 export async function validatePythonSolution(
   userCode: string,
   testCases: Array<{
-    input?: any;
+    input?: unknown;
     expectedOutput: string;
     testCode: string;
-  }>,
-  timeoutMs: number = 5000
+  }>
 ): Promise<ExecutionResult> {
   try {
     const pyodide = await getPyodide();

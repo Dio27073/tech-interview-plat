@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { BookOpen, Target, Code, CheckCircle, Play, Clock, Users } from "lucide-react"
+import { BookOpen, Target, Code, CheckCircle, Play, Clock } from "lucide-react"
 import type { TopicContent as TopicContentInterface } from "@/lib/topic-content"
 import ContentSectionRenderer from "./ContentSectionRenderer"
 import QuizSection from "./QuizSection"
@@ -150,7 +150,7 @@ const TopicContent: React.FC<TopicContentProps> = ({ content }) => {
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Practice Problems</h2>
                 <p className="text-gray-600 max-w-2xl mx-auto">
-                  Apply what you've learned with these carefully crafted problems. Start with easier problems and work
+                  Apply what you&apos;ve learned with these carefully crafted problems. Start with easier problems and work
                   your way up to more challenging ones.
                 </p>
               </div>

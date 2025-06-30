@@ -2,6 +2,8 @@
  * API client for interacting with AWS backend
  */
 
+import type { TopicContent } from '@/lib/topic-content';
+
 // Constants
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://m8d4jj30wa.execute-api.us-east-2.amazonaws.com/dev';
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
@@ -52,7 +54,7 @@ export async function fetchTopicById(topicId: string) {
 /**
  * Update a topic in the AWS API
  */
-export async function updateTopic(topicId: string, topicData: any) {
+export async function updateTopic(topicId: string, topicData: TopicContent) {
   if (!topicId) {
     throw new Error('Topic ID is required');
   }

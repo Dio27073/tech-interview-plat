@@ -1,4 +1,5 @@
 // src/app/curriculum/[categoryId]/page.tsx
+import { use } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { curriculumData, type Chapter } from '@/lib/curriculum-data';
@@ -26,9 +27,12 @@ export function generateStaticParams(): { categoryId: string }[] {
 }
 
 // Page component
-export default function CategoryPage({ params }: { params: { categoryId: string } }) {
+export default function CategoryPage({ params }: { params: Promise<{ categoryId: string }> }) {
+  // Unwrap async params using React's use hook
+  const { categoryId } = use(params);
+  
   // Find the category by ID
-  const category = curriculumData.find(cat => cat.id === params.categoryId);
+  const category = curriculumData.find(cat => cat.id === categoryId);
   
   // Return 404 if category not found
   if (!category) {

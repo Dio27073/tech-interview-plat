@@ -23,9 +23,9 @@ const tableName = process.env.TOPIC_CONTENT_TABLE || 'Topics';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { topicId: string } }
+  { params }: { params: Promise<{ topicId: string }> }
 ) {
-  const topicId = params.topicId;
+  const { topicId } = await params;
   
   if (!topicId) {
     return NextResponse.json(
@@ -64,9 +64,9 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { topicId: string } }
+  { params }: { params: Promise<{ topicId: string }> }
 ) {
-  const topicId = params.topicId;
+  const { topicId } = await params;
   
   if (!topicId) {
     return NextResponse.json(
@@ -108,9 +108,9 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { topicId: string } }
+  { params }: { params: Promise<{ topicId: string }> }
 ) {
-  const topicId = params.topicId;
+  const { topicId } = await params;
   
   if (!topicId) {
     return NextResponse.json(
